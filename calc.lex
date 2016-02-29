@@ -1,10 +1,13 @@
 %{
 #include <stdio.h>
+#include <string.h>
 %}
 %{
 int  linenum=0;
+int i ;
 %}
-
+Comment ("/*"([^*]|\*+[^*/])*\*+"/")
+NOTComment ("/*"([^*/]+))
 %%
 [\t] ;
 (?i:"if")   {printf("Reserved keyword IF \t ");}
@@ -14,10 +17,10 @@ int  linenum=0;
 ((?i:"WHile")) {printf("KEYWORD WHILE\t");}
 (?i:"else") {printf("Keyword else\t");}
 ([a-zA-Z](([a-zA-Z])|([0-9]))*)(([.|#|$|_])?((([a-zA-Z])|([0-9])))+)?  { printf("ID\t");}
-[a-zA-Z]*#[^\W] {printf("Error IDnumber 3\n");}
-[a-zA-Z]*#[^0-9] {printf("Error ID number 3\n");}
-(([0-9]+[.][0-9]*)|([0-9]+))([e|E]([+]|[-])?[0-9]+)? {printf("Number\t");}
-(([0-9]+[.][0-9]*)|([0-9]+))([e|E]([+]|[-])?[a-zA-Z]+) {printf("ERROR \t");}
+[a-zA-Z]*#[(^\W||'\n')] {printf("Error ID in "),linenum;}
+[a-zA-Z]*#[(^0-9||'\n')] {printf("Error ID\t");}
+(([0-9]+[.][0-9]*)|([0-9]+))([e|E]([+]|[-])?[0-9]+)? {printf("NUM\t");}
+(([0-9]+[.][0-9]*)|([0-9]+))([e|E]([+]|[-])[^0-9]) {printf("ERROR NUM in "),linenum;}
 [+] {printf("Special symbol Plus\t");}
 [-] {printf("Special symbol Minus\t");}
 [*] {printf("Special symbol Multiply\t");}
@@ -37,16 +40,26 @@ int  linenum=0;
 [\{] {printf("Special symbol {\t");}
 [\}] {printf("Special symbol }\t");}
 [=] {printf("Special symbol equal \t");}
-"/*"([^*]|\*+[^*/])*\*+"/" {printf("Comment ");}
-[\n]   { linenum++; printf("linenumber = %d \n",linenum); }
+[\n]   { linenum++; printf("line number = %d \n",linenum); }
+{Comment} {
+  for (i=0; i<yyleng;i++){
+    if(yytext[i] == '\n'){  
+      linenum++;
+      printf("Comment in Line number %d \n",linenum);
+    }
+  }
+}
+{NOTComment} {printf("Error comment not closed in "),linenum;}
+[^.] {printf("Error not an alphabet of the language in line number %d ",linenum+1);}
 %%
+
 main() {
   // lex through the input:
   // open a file handle to a particular file:
   FILE *myfile = fopen("test.txt", "r");
   // make sure it's valid:
   if (!myfile) {
-   printf("KHara");
+   printf("Error Cannot Open file");
     return -1;
   }
   // set lex to read from it instead of defaulting to STDIN:
@@ -75,6 +88,12 @@ main() {
   //([a-zA-Z](([a-zA-Z])|([0-9]))*)(([.|#|$|_])?)(([^a-zA-Z])|([^0-9])) {printf("ERROR numbarrr brog\t");}
   //[/][*] {printf("open comment\t");}
 // [*][/] {printf("Close comment \t");}
+  //   "/*"([^*]|\*+[^*/])*\*+"/" {printf("Comment ");}
+  //   "/*"([^*]|[/n]) {printf("bedayet el comment \t");}
 
+
+
+
+//(([0-9]+[.][0-9]*)|([0-9]+))([e|E]([+]|[-])?[a-zA-Z]+) {printf("ERROR NUM\t");}
   
 }
